@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ManufactureIQ — Batch Intelligence System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #080c14;
+  --bg2: #0d1420;
+  --bg3: #111927;
+  --card: #131e2e;
+  --card2: #192435;
+  --border: #1e2f44;
+  --border2: #243548;
+  --accent: #00d4ff;
+  --accent2: #0099cc;
+  --green: #00e676;
+  --amber: #ffab00;
+  --red: #ff4444;
+  --purple: #b388ff;
+  --text: #e8edf5;
+  --text2: #8899aa;
+  --text3: #556677;
+  --glow: 0 0 20px rgba(0,212,255,0.15);
+  --glow2: 0 0 40px rgba(0,212,255,0.08);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,212,255,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse 40% 40% at 90% 80%, rgba(179,136,255,0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,12,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--text);
+}
+.nav-brand .logo {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), #0066ff);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.nav-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; font-weight: 400;
+  color: var(--accent); letter-spacing: 0.15em;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 3px 10px; border-radius: 20px;
+}
+.nav-status {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--green);
+}
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+/* LAYOUT */
+.app { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem; position: relative; z-index: 1; }
+
+.grid-main { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; align-items: start; }
+.grid-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.grid-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.grid-bottom { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+
+/* CARDS */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: var(--border2); box-shadow: var(--glow); }
+.card-header {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text2);
+}
+.card-body { padding: 1.5rem; }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--text3);
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* KPI CARDS */
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent-color, var(--accent));
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--glow2); }
+.kpi-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text2); margin-bottom: 0.5rem; }
+.kpi-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.8rem; font-weight: 500; color: var(--text);
+  line-height: 1;
+}
+.kpi-unit { font-size: 0.8rem; color: var(--text2); margin-left: 4px; }
+.kpi-sub { font-size: 0.7rem; color: var(--text3); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+.kpi-status { 
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em;
+  padding: 2px 8px; border-radius: 20px; display: inline-block; margin-top: 6px;
+}
+.status-ok { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+.status-warn { background: rgba(255,171,0,0.12); color: var(--amber); border: 1px solid rgba(255,171,0,0.2); }
+.status-err { background: rgba(255,68,68,0.12); color: var(--red); border: 1px solid rgba(255,68,68,0.2); }
+
+/* SLIDERS */
+.param-row { margin-bottom: 1.4rem; }
+.param-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.param-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+.param-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem; color: var(--accent);
+  background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.15);
+  padding: 2px 8px; border-radius: 6px;
+}
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  background: var(--border2); border-radius: 2px; outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 8px rgba(0,212,255,0.5); cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+.param-range { font-size: 0.6rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; display: flex; justify-content: space-between; margin-top: 3px; }
+
+/* PREDICT BUTTON */
+.btn-predict {
+  width: 100%; padding: 1rem;
+  background: linear-gradient(135deg, var(--accent), #0066ff);
+  color: white; font-family: 'Syne', sans-serif;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; border: none; border-radius: 12px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: all 0.2s; margin-top: 1rem;
+}
+.btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.3); }
+.btn-predict:active { transform: translateY(0); }
+.btn-predict.loading { opacity: 0.7; cursor: wait; }
+
+/* ROOT CAUSE */
+.cause-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 0.9rem; border-radius: 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  margin-bottom: 0.8rem; transition: border-color 0.2s;
+}
+.cause-item:hover { border-color: var(--border2); }
+.cause-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.cause-dot.high { background: var(--red); box-shadow: 0 0 8px rgba(255,68,68,0.4); }
+.cause-dot.medium { background: var(--amber); box-shadow: 0 0 8px rgba(255,171,0,0.4); }
+.cause-dot.low { background: var(--green); box-shadow: 0 0 8px rgba(0,230,118,0.4); }
+.cause-title { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.cause-rec { font-size: 0.7rem; color: var(--text2); line-height: 1.5; }
+.severity-badge { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 4px; }
+.sev-High { background: rgba(255,68,68,0.15); color: var(--red); }
+.sev-Medium { background: rgba(255,171,0,0.15); color: var(--amber); }
+.sev-Low { background: rgba(0,230,118,0.15); color: var(--green); }
+
+/* ANOMALY BANNER */
+.anomaly-banner {
+  padding: 0.9rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 12px;
+}
+.anomaly-banner.detected { background: rgba(255,68,68,0.08); border: 1px solid rgba(255,68,68,0.25); }
+.anomaly-banner.clear { background: rgba(0,230,118,0.06); border: 1px solid rgba(0,230,118,0.2); }
+.anomaly-icon { font-size: 1.2rem; }
+.anomaly-text { font-size: 0.78rem; color: var(--text); }
+.anomaly-type { font-weight: 700; }
+
+/* GAUGE */
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 1rem 0; }
+.gauge-canvas { max-width: 200px; }
+.gauge-label { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text2); margin-top: 0.5rem; }
+
+/* GOLDEN COMPARISON */
+.golden-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
+.golden-param { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); width: 140px; flex-shrink: 0; }
+.golden-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; position: relative; }
+.golden-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.golden-dev { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; width: 55px; text-align: right; flex-shrink: 0; }
+.dev-pos { color: var(--red); }
+.dev-neg { color: var(--green); }
+.dev-zero { color: var(--text3); }
+
+/* PHASE TIMELINE */
+.phase-timeline { display: flex; gap: 0; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; }
+.phase-seg {
+  flex: 1; padding: 6px 4px; text-align: center;
+  font-size: 0.55rem; font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; color: rgba(255,255,255,0.7);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer; transition: opacity 0.2s;
+}
+.phase-seg:last-child { border-right: none; }
+.phase-seg:hover { opacity: 0.8; }
+
+/* ENERGY BAR */
+.energy-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.6rem; }
+.energy-param-name { font-size: 0.68rem; color: var(--text2); width: 100px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+.energy-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.energy-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.energy-pct { font-size: 0.68rem; color: var(--text2); width: 40px; text-align: right; font-family: 'JetBrains Mono', monospace; }
+
+/* TABS */
+.tab-row { display: flex; gap: 4px; background: var(--bg2); padding: 4px; border-radius: 10px; margin-bottom: 1.2rem; }
+.tab-btn {
+  flex: 1; padding: 7px; border: none; background: transparent;
+  color: var(--text2); font-family: 'Syne', sans-serif;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em;
+  border-radius: 7px; cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active { background: var(--card2); color: var(--accent); }
+
+/* CHART CONTAINERS */
+.chart-container { position: relative; height: 220px; }
+.chart-container-sm { position: relative; height: 180px; }
+
+/* LOADING */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(0,212,255,0.2);
+  border-top: 2px solid var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+  display: inline-block; margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOOLTIP */
+.tooltip-icon { cursor: help; color: var(--text3); font-size: 0.75rem; margin-left: 4px; }
+
+/* RESPONSIVE */
+@media (max-width:1200px) {
+  .grid-main { grid-template-columns: 1fr; }
+  .grid-metrics { grid-template-columns: repeat(2,1fr); }
+  .grid-bottom { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width:768px) {
+  .grid-metrics { grid-template-columns: 1fr; }
+  .grid-charts { grid-template-columns: 1fr; }
+  .grid-bottom { grid-template-columns: 1fr; }
+  .app { padding: 1rem; }
+}
+
+.fade-in { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.tag {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em;
+  padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;
+}
+.tag-blue { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+.tag-purple { background: rgba(179,136,255,0.1); color: var(--purple); border: 1px solid rgba(179,136,255,0.2); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="logo">⚙</div>
+    ManufactureIQ
+    <span class="nav-badge">BATCH INTELLIGENCE v1.0</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="font-size:0.7rem;color:var(--text3);font-family:'JetBrains Mono',monospace" id="batch-count">— batches loaded</span>
+    <div class="nav-status">
+      <div class="pulse"></div>
+      LIVE MONITORING
+    </div>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- ANOMALY BANNER -->
+  <div class="anomaly-banner clear fade-in" id="anomaly-banner">
+    <div class="anomaly-icon">✅</div>
+    <div class="anomaly-text"><span class="anomaly-type">SYSTEM NORMAL</span> — All parameters within acceptable operating range. No anomalies detected.</div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="grid-metrics" id="kpi-row">
+    <div class="kpi-card fade-in" style="--accent-color:var(--accent)">
+      <div class="kpi-label">Hardness</div>
+      <div class="kpi-value" id="kpi-hardness">—<span class="kpi-unit">N</span></div>
+      <div class="kpi-sub">Target: 80–120 N</div>
+      <span class="kpi-status status-ok" id="kpi-hardness-s">PENDING</span>
+    </div>
+    <div class="kpi-card fade-in" style="--accent-color:var(--green)">
+      <div class="kpi-label">Dissolution Rate</div>
+      <div class="kpi-value" id="kpi-dissolution">—<span class="kpi-unit">%</span></div>
+      <div class="kpi-sub">Target: ≥85%</div>
+      <span class="kpi-status status-ok" id="kpi-dissolution-s">PENDING</span>
+    </div>
+    <div class="kpi-card fade-in" style="--accent-color:var(--amber)">
+      <div class="kpi-label">Friability</div>
+      <div class="kpi-value" id="kpi-friability">—<span class="kpi-unit">%</span></div>
+      <div class="kpi-sub">Target: ≤1.0%</div>
+      <span class="kpi-status status-ok" id="kpi-friability-s">PENDING</span>
+    </div>
+    <div class="kpi-card fade-in" style="--accent-color:var(--purple)">
+      <div class="kpi-label">Content Uniformity</div>
+      <div class="kpi-value" id="kpi-uniformity">—<span class="kpi-unit">%</span></div>
+      <div class="kpi-sub">Target: 95–105%</div>
+      <span class="kpi-status status-ok" id="kpi-uniformity-s">PENDING</span>
+    </div>
+    <div class="kpi-card fade-in" style="--accent-color:#ff6b6b">
+      <div class="kpi-label">Power Consumption</div>
+      <div class="kpi-value" id="kpi-power">—<span class="kpi-unit">kW</span></div>
+      <div class="kpi-sub">CO₂: <span id="kpi-co2">—</span> kg/h</div>
+      <span class="kpi-status" id="kpi-energy-s">PENDING</span>
+    </div>
+    <div class="kpi-card fade-in" style="--accent-color:#40c4ff">
+      <div class="kpi-label">Efficiency Score</div>
+      <div class="kpi-value" id="kpi-efficiency">—<span class="kpi-unit">%</span></div>
+      <div class="kpi-sub">Tablet Weight: <span id="kpi-weight">—</span> mg</div>
+      <span class="kpi-status status-ok" id="kpi-tablet-s">OPTIMAL</span>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-main">
+
+    <!-- LEFT: INPUT PANEL -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">⚙ Process Parameters</span>
+          <span class="tag tag-blue">REAL-TIME</span>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Environmental Conditions</div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Temperature <span class="tooltip-icon" title="Drying/process temperature. High values cause quality degradation.">ⓘ</span></span>
+              <span class="param-value" id="v-temp">35°C</span>
+            </div>
+            <input type="range" min="20" max="80" step="0.5" value="35" id="s-temp" oninput="onSlider('temp',this.value,'°C')">
+            <div class="param-range"><span>20°C</span><span>80°C</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Pressure <span class="tooltip-icon" title="Operating pressure. Affects granulation and compression phases.">ⓘ</span></span>
+              <span class="param-value" id="v-pressure">1.0 Bar</span>
+            </div>
+            <input type="range" min="0.5" max="1.5" step="0.01" value="1.0" id="s-pressure" oninput="onSlider('pressure',this.value,' Bar')">
+            <div class="param-range"><span>0.5 Bar</span><span>1.5 Bar</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Humidity <span class="tooltip-icon" title="Ambient humidity %. High humidity causes moisture pickup and friability issues.">ⓘ</span></span>
+              <span class="param-value" id="v-humidity">38%</span>
+            </div>
+            <input type="range" min="15" max="70" step="0.5" value="38" id="s-humidity" oninput="onSlider('humidity',this.value,'%')">
+            <div class="param-range"><span>15%</span><span>70%</span></div>
+          </div>
+
+          <div class="section-label">Mechanical Parameters</div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Motor Speed <span class="tooltip-icon" title="Granulator/blender RPM. High speeds increase vibration and energy.">ⓘ</span></span>
+              <span class="param-value" id="v-motor">120 RPM</span>
+            </div>
+            <input type="range" min="0" max="900" step="5" value="120" id="s-motor" oninput="onSlider('motor',this.value,' RPM')">
+            <div class="param-range"><span>0</span><span>900 RPM</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Vibration <span class="tooltip-icon" title="Equipment vibration in mm/s. >7 mm/s indicates mechanical fault.">ⓘ</span></span>
+              <span class="param-value" id="v-vibration">3.0 mm/s</span>
+            </div>
+            <input type="range" min="0" max="10" step="0.1" value="3.0" id="s-vibration" oninput="onSlider('vibration',this.value,' mm/s')">
+            <div class="param-range"><span>0</span><span>10 mm/s</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Flow Rate <span class="tooltip-icon" title="Binder/fluid flow rate in LPM during granulation.">ⓘ</span></span>
+              <span class="param-value" id="v-flow">1.5 LPM</span>
+            </div>
+            <input type="range" min="0" max="10" step="0.1" value="1.5" id="s-flow" oninput="onSlider('flow',this.value,' LPM')">
+            <div class="param-range"><span>0</span><span>10 LPM</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Compression Force <span class="tooltip-icon" title="Tablet press compression force in kN. Controls hardness directly.">ⓘ</span></span>
+              <span class="param-value" id="v-comp">10.0 kN</span>
+            </div>
+            <input type="range" min="0" max="20" step="0.1" value="10" id="s-comp" oninput="onSlider('comp',this.value,' kN')">
+            <div class="param-range"><span>0</span><span>20 kN</span></div>
+          </div>
+
+          <div class="section-label">Production Settings</div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Machine Speed</span>
+              <span class="param-value" id="v-mspeed">169 RPM</span>
+            </div>
+            <input type="range" min="92" max="280" step="1" value="169" id="s-mspeed" oninput="onSlider('mspeed',this.value,' RPM')">
+            <div class="param-range"><span>92</span><span>280 RPM</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Granulation Time</span>
+              <span class="param-value" id="v-grantime">16 min</span>
+            </div>
+            <input type="range" min="9" max="27" step="1" value="16" id="s-grantime" oninput="onSlider('grantime',this.value,' min')">
+            <div class="param-range"><span>9 min</span><span>27 min</span></div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-header">
+              <span class="param-label">Binder Amount</span>
+              <span class="param-value" id="v-binder">9.0 kg</span>
+            </div>
+            <input type="range" min="5.8" max="13.5" step="0.1" value="9.0" id="s-binder" oninput="onSlider('binder',this.value,' kg')">
+            <div class="param-range"><span>5.8 kg</span><span>13.5 kg</span></div>
+          </div>
+
+          <button class="btn-predict" id="predict-btn" onclick="runPrediction()">
+            ⚡ RUN ANALYSIS
+          </button>
+
+          <div style="font-size:0.65rem;color:var(--text3);text-align:center;margin-top:0.8rem;font-family:'JetBrains Mono',monospace">
+            Sliders update predictions in real-time
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div>
+
+      <!-- CHARTS TOP ROW -->
+      <div class="grid-charts">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📈 Energy Trend (Batch T001)</span>
+            <span class="tag tag-blue">LIVE DATA</span>
+          </div>
+          <div class="card-body">
+            <div id="phase-timeline" class="phase-timeline"></div>
+            <div class="chart-container"><canvas id="energy-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🎯 Quality Metrics</span>
+            <span class="tag tag-purple">PREDICTED</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container"><canvas id="quality-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS BOTTOM ROW -->
+      <div class="grid-bottom">
+        <!-- ROOT CAUSE -->
+        <div class="card" style="grid-column: span 2">
+          <div class="card-header">
+            <span class="card-title">🔍 Root Cause Intelligence</span>
+            <span id="rca-count" class="tag tag-blue">0 ISSUES</span>
+          </div>
+          <div class="card-body" id="root-causes">
+            <div style="color:var(--text3);font-size:0.78rem;text-align:center;padding:1rem">
+              Run analysis to detect root causes
+            </div>
+          </div>
+        </div>
+
+        <!-- ENERGY PANEL -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚡ Energy Pattern Analysis</span>
+          </div>
+          <div class="card-body">
+            <div id="shap-bars"></div>
+            <div class="chart-container-sm" style="margin-top:1rem"><canvas id="gauge-chart"></canvas></div>
+            <div style="text-align:center;font-size:0.7rem;color:var(--text3);margin-top:4px">Energy Efficiency Score</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- GOLDEN COMPARISON + RADAR -->
+      <div class="grid-charts" style="margin-top:1.5rem">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏆 Golden Batch Comparison</span>
+            <span class="tag tag-purple">DEVIATION</span>
+          </div>
+          <div class="card-body" id="golden-panel">
+            <div style="color:var(--text3);font-size:0.78rem">Run analysis to compare against optimal batch</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🕸 Batch Performance Radar</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container"><canvas id="radar-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BATCH HISTORY TABLE -->
+      <div class="card" style="margin-top:1.5rem">
+        <div class="card-header">
+          <span class="card-title">📋 Historical Batch Database</span>
+          <span class="tag tag-blue" id="hist-count">60 RECORDS</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div style="overflow-x:auto">
+            <table id="batch-table" style="width:100%;border-collapse:collapse;font-size:0.72rem">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <th style="padding:10px 16px;text-align:left;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Batch ID</th>
+                  <th style="padding:10px 16px;text-align:right;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Hardness</th>
+                  <th style="padding:10px 16px;text-align:right;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Friability</th>
+                  <th style="padding:10px 16px;text-align:right;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Dissolution</th>
+                  <th style="padding:10px 16px;text-align:right;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Uniformity</th>
+                  <th style="padding:10px 16px;text-align:center;color:var(--text3);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600">Status</th>
+                </tr>
+              </thead>
+              <tbody id="batch-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+let energyChart, qualityChart, gaugeChart, radarChart;
+let debounceTimer;
+
+// Slider handler
+function onSlider(key, val, unit) {
+  document.getElementById('v-'+key).textContent = parseFloat(val).toFixed(key==='pressure'?2:1) + unit;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(runPrediction, 400);
+}
+
+function getParams() {
+  return {
+    temperature: +document.getElementById('s-temp').value,
+    pressure: +document.getElementById('s-pressure').value,
+    humidity: +document.getElementById('s-humidity').value,
+    motor_speed: +document.getElementById('s-motor').value,
+    vibration: +document.getElementById('s-vibration').value,
+    flow_rate: +document.getElementById('s-flow').value,
+    compression_force: +document.getElementById('s-comp').value,
+    machine_speed: +document.getElementById('s-mspeed').value,
+    granulation_time: +document.getElementById('s-grantime').value,
+    binder_amount: +document.getElementById('s-binder').value,
+    drying_temp: 59.4, drying_time: 28.0, lubricant_conc: 1.2
+  };
+}
+
+async function runPrediction() {
+  const btn = document.getElementById('predict-btn');
+  btn.innerHTML = '<span class="spinner"></span> ANALYZING...';
+  btn.classList.add('loading');
+
+  try {
+    const res = await fetch(`${API}/api/predict`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(getParams())
+    });
+    const data = await res.json();
+    updateDashboard(data);
+  } catch(e) {
+    // Fallback demo data if backend not running
+    updateDashboard(getDemoData());
+  } finally {
+    btn.innerHTML = '⚡ RUN ANALYSIS';
+    btn.classList.remove('loading');
+  }
+}
+
+function getDemoData() {
+  const t = +document.getElementById('s-temp').value;
+  const vib = +document.getElementById('s-vibration').value;
+  const hum = +document.getElementById('s-humidity').value;
+  const power = 15 + t*0.3 + vib*1.5 + hum*0.1;
+  return {
+    quality: { hardness: 88+Math.random()*10, friability: 0.6+Math.random()*0.2,
+      dissolution_rate: 88+Math.random()*5, content_uniformity: 97+Math.random()*3,
+      disintegration_time: 8+Math.random()*2, tablet_weight: 200+Math.random()*3 },
+    energy: { power_consumption: power, energy_status: power>40?'High':'Normal',
+      co2_emissions: power*0.233, efficiency_score: Math.max(40, 100-(power/66)*50) },
+    root_causes: vib>7 ? [
+      {issue:'High Vibration Detected',severity:'High',recommendation:'Inspect motor bearings and mounting fixtures.'},
+      {issue:'Elevated Energy Usage',severity:'Medium',recommendation:'Audit load profile across production phases.'}
+    ] : [{issue:'All Parameters Within Normal Range',severity:'Low',recommendation:'System operating optimally.'}],
+    anomaly: vib>8 ? {detected:true,type:'Equipment',description:`Vibration ${vib} mm/s → likely mechanical fault`}
+                   : {detected:false,type:null,description:null},
+    golden_deviation: {
+      avg_temp:{current:t,golden:35,deviation:((t-35)/35*100).toFixed(1)},
+      avg_motor_speed:{current:+document.getElementById('s-motor').value,golden:121,deviation:'5.2'},
+      avg_vibration:{current:vib,golden:2.9,deviation:((vib-2.9)/2.9*100).toFixed(1)},
+      avg_humidity:{current:hum,golden:38,deviation:((hum-38)/38*100).toFixed(1)},
+    },
+    shap_importance: {avg_vibration:0.28,avg_motor_speed:0.22,avg_temp:0.18,avg_humidity:0.14,avg_flow_rate:0.09,avg_pressure:0.05,avg_compression:0.04}
+  };
+}
+
+function updateDashboard(d) {
+  const q = d.quality, e = d.energy;
+
+  // KPIs
+  setText('kpi-hardness', q.hardness.toFixed(1));
+  setText('kpi-dissolution', q.dissolution_rate.toFixed(1));
+  setText('kpi-friability', q.friability.toFixed(2));
+  setText('kpi-uniformity', q.content_uniformity.toFixed(1));
+  setText('kpi-power', e.power_consumption.toFixed(1));
+  setText('kpi-co2', e.co2_emissions.toFixed(1));
+  setText('kpi-efficiency', e.efficiency_score.toFixed(0));
+  setText('kpi-weight', q.tablet_weight.toFixed(1));
+
+  // Status badges
+  setStatus('kpi-hardness-s', q.hardness >= 80 && q.hardness <= 120, q.hardness < 70 || q.hardness > 135);
+  setStatus('kpi-dissolution-s', q.dissolution_rate >= 85, q.dissolution_rate < 80);
+  setStatus('kpi-friability-s', q.friability <= 1.0, q.friability > 1.5, true);
+  setStatus('kpi-uniformity-s', q.content_uniformity >= 95 && q.content_uniformity <= 105, q.content_uniformity < 90 || q.content_uniformity > 110);
+  const energyEl = document.getElementById('kpi-energy-s');
+  energyEl.textContent = e.energy_status;
+  energyEl.className = 'kpi-status ' + (e.energy_status === 'Normal' ? 'status-ok' : 'status-warn');
+
+  // Anomaly
+  updateAnomaly(d.anomaly);
+  // Root causes
+  updateRootCauses(d.root_causes);
+  // SHAP
+  updateShap(d.shap_importance);
+  // Golden
+  updateGolden(d.golden_deviation);
+  // Charts
+  updateQualityChart(q);
+  updateGauge(e.efficiency_score);
+  updateRadar(q, e);
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if(el) el.firstChild.textContent = val;
+}
+
+function setStatus(id, ok, bad, invert) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(bad) { el.textContent = invert?'FAIL':'HIGH'; el.className='kpi-status status-err'; }
+  else if(ok) { el.textContent = 'PASS'; el.className='kpi-status status-ok'; }
+  else { el.textContent = 'CHECK'; el.className='kpi-status status-warn'; }
+}
+
+function updateAnomaly(a) {
+  const el = document.getElementById('anomaly-banner');
+  if(a.detected) {
+    el.className = 'anomaly-banner detected fade-in';
+    el.innerHTML = `<div class="anomaly-icon">⚠️</div><div class="anomaly-text"><span class="anomaly-type">[${a.type.toUpperCase()} ANOMALY DETECTED]</span> — ${a.description}</div>`;
+  } else {
+    el.className = 'anomaly-banner clear fade-in';
+    el.innerHTML = `<div class="anomaly-icon">✅</div><div class="anomaly-text"><span class="anomaly-type">SYSTEM NORMAL</span> — All parameters within acceptable operating range. No anomalies detected.</div>`;
+  }
+}
+
+function updateRootCauses(causes) {
+  document.getElementById('rca-count').textContent = `${causes.length} ISSUE${causes.length!==1?'S':''}`;
+  const el = document.getElementById('root-causes');
+  el.innerHTML = causes.map(c => `
+    <div class="cause-item fade-in">
+      <div class="cause-dot ${c.severity.toLowerCase()}"></div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div class="cause-title">${c.issue}</div>
+          <span class="severity-badge sev-${c.severity}">${c.severity.toUpperCase()}</span>
+        </div>
+        <div class="cause-rec">→ ${c.recommendation}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateShap(shap) {
+  const entries = Object.entries(shap).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0][1];
+  const colors = ['var(--accent)','var(--green)','var(--amber)','var(--purple)','#ff6b6b','#40c4ff','#b2ff59'];
+  const labels = {
+    avg_vibration:'Vibration',avg_motor_speed:'Motor Speed',avg_temp:'Temperature',
+    avg_humidity:'Humidity',avg_flow_rate:'Flow Rate',avg_pressure:'Pressure',avg_compression:'Compression'
+  };
+  document.getElementById('shap-bars').innerHTML = `
+    <div style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem">ENERGY DRIVER IMPORTANCE</div>
+    ${entries.map((([k,v],i)=>`
+    <div class="energy-bar-row">
+      <div class="energy-param-name">${labels[k]||k}</div>
+      <div class="energy-bar-bg"><div class="energy-bar-fill" style="width:${(v/max*100).toFixed(0)}%;background:${colors[i%colors.length]}"></div></div>
+      <div class="energy-pct">${(v*100).toFixed(0)}%</div>
+    </div>
+  `)).join('')}`;
+}
+
+function updateGolden(golden) {
+  if(!golden) return;
+  const el = document.getElementById('golden-panel');
+  const labels = {avg_temp:'Temperature',avg_motor_speed:'Motor Speed',avg_vibration:'Vibration',avg_humidity:'Humidity',avg_pressure:'Pressure',avg_flow_rate:'Flow Rate'};
+  const entries = Object.entries(golden).slice(0,6);
+  el.innerHTML = entries.map(([k,v])=>{
+    const dev = parseFloat(v.deviation);
+    const pct = Math.min(100, Math.abs(dev));
+    const color = Math.abs(dev)<5?'var(--green)':Math.abs(dev)<15?'var(--amber)':'var(--red)';
+    const cls = dev>0?'dev-pos':dev<0?'dev-neg':'dev-zero';
+    return `<div class="golden-row">
+      <div class="golden-param">${labels[k]||k}</div>
+      <div class="golden-bar-wrap"><div class="golden-bar" style="width:${pct}%;background:${color}"></div></div>
+      <div class="golden-dev ${cls}">${dev>0?'+':''}${dev}%</div>
+    </div>`;
+  }).join('');
+}
+
+function updateQualityChart(q) {
+  const ctx = document.getElementById('quality-chart').getContext('2d');
+  const data = [q.hardness, q.dissolution_rate, q.content_uniformity, q.disintegration_time*5];
+  const labels = ['Hardness (N)','Dissolution (%)','Uniformity (%)','Disint. ×5 (s)'];
+  if(qualityChart) qualityChart.destroy();
+  qualityChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets:[{
+        data,
+        backgroundColor: ['rgba(0,212,255,0.7)','rgba(0,230,118,0.7)','rgba(179,136,255,0.7)','rgba(255,171,0,0.7)'],
+        borderColor: ['var(--accent)','var(--green)','var(--purple)','var(--amber)'],
+        borderWidth: 1, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#556677',font:{size:10,family:'JetBrains Mono'}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#556677',font:{size:10,family:'JetBrains Mono'}},beginAtZero:true}
+      }
+    }
+  });
+}
+
+function updateGauge(score) {
+  const ctx = document.getElementById('gauge-chart').getContext('2d');
+  if(gaugeChart) gaugeChart.destroy();
+  const color = score>75?'rgba(0,230,118,0.8)':score>50?'rgba(255,171,0,0.8)':'rgba(255,68,68,0.8)';
+  gaugeChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      datasets:[{
+        data:[score, 100-score],
+        backgroundColor:[color,'rgba(255,255,255,0.05)'],
+        borderWidth:0, circumference:180, rotation:270,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      cutout:'75%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{enabled:false},
+      }
+    },
+    plugins:[{
+      id:'gaugeText',
+      afterDraw(chart){
+        const {ctx,chartArea:{left,right,top,bottom}} = chart;
+        const cx = (left+right)/2, cy = bottom - 10;
+        ctx.save();
+        ctx.font = 'bold 20px JetBrains Mono';
+        ctx.fillStyle = '#e8edf5';
+        ctx.textAlign = 'center';
+        ctx.fillText(score.toFixed(0)+'%', cx, cy);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+function updateRadar(q, e) {
+  const ctx = document.getElementById('radar-chart').getContext('2d');
+  if(radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels:['Hardness','Dissolution','Uniformity','Low Friability','Efficiency','Tablet Weight'],
+      datasets:[{
+        label:'Current Batch',
+        data:[
+          Math.min(100,q.hardness/1.35),
+          q.dissolution_rate,
+          Math.min(100,q.content_uniformity),
+          Math.max(0,100-q.friability*100),
+          e.efficiency_score,
+          Math.min(100,(q.tablet_weight/213.8)*100),
+        ],
+        borderColor:'var(--accent)',
+        backgroundColor:'rgba(0,212,255,0.1)',
+        pointBackgroundColor:'var(--accent)',
+        pointRadius:4, borderWidth:2,
+      },{
+        label:'Golden Batch',
+        data:[70, 89.3, 98.7, 93.5, 78, 93.5],
+        borderColor:'rgba(179,136,255,0.7)',
+        backgroundColor:'rgba(179,136,255,0.05)',
+        pointBackgroundColor:'var(--purple)',
+        pointRadius:3, borderWidth:1, borderDash:[4,4],
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{r:{
+        grid:{color:'rgba(255,255,255,0.06)'},
+        pointLabels:{color:'#8899aa',font:{size:10,family:'Syne'}},
+        ticks:{display:false}, suggestedMin:0, suggestedMax:100,
+        angleLines:{color:'rgba(255,255,255,0.06)'}
+      }},
+      plugins:{legend:{labels:{color:'#8899aa',font:{size:10,family:'Syne'},boxWidth:10}}}
+    }
+  });
+}
+
+// Load time series
+async function loadTimeSeries() {
+  try {
+    const res = await fetch(`${API}/api/timeseries`);
+    const data = await res.json();
+    renderEnergyChart(data);
+    renderPhaseTimeline(data);
+  } catch {
+    renderEnergyChart(getFallbackTS());
+    renderPhaseTimeline(getFallbackTS());
+  }
+}
+
+function getFallbackTS() {
+  const phases = ['Preparation','Granulation','Drying','Milling','Blending','Compression','Coating','Quality_Testing'];
+  const data = [];
+  for(let i=0;i<211;i++){
+    const ph = phases[Math.floor(i/27)%8];
+    data.push({time:i, phase:ph, power: 5+Math.sin(i*0.1)*10+Math.random()*8+(ph==='Compression'?30:ph==='Drying'?20:0)});
+  }
+  return data;
+}
+
+const PHASE_COLORS = {
+  Preparation:'#40c4ff',Granulation:'#00e676',Drying:'#ffab00',Milling:'#ff6b6b',
+  Blending:'#b388ff',Compression:'#00d4ff',Coating:'#ff80ab','Quality_Testing':'#64ffda'
+};
+
+function renderPhaseTimeline(data) {
+  const phases = [...new Set(data.map(d=>d.phase))];
+  document.getElementById('phase-timeline').innerHTML = phases.map(p=>`
+    <div class="phase-seg" style="background:${PHASE_COLORS[p]||'#333'}22;border-top:2px solid ${PHASE_COLORS[p]||'#333'}" title="${p}">
+      ${p.substring(0,3).toUpperCase()}
+    </div>`).join('');
+}
+
+function renderEnergyChart(data) {
+  const ctx = document.getElementById('energy-chart').getContext('2d');
+  if(energyChart) energyChart.destroy();
+
+  const times = data.map(d=>d.time);
+  const power = data.map(d=>d.power);
+  const phaseColors = data.map(d=>PHASE_COLORS[d.phase]||'#00d4ff');
+
+  energyChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:times,
+      datasets:[{
+        label:'Power (kW)',
+        data:power,
+        borderColor:'var(--accent)',
+        backgroundColor:'rgba(0,212,255,0.06)',
+        borderWidth:1.5, pointRadius:0, fill:true, tension:0.3,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(13,20,32,0.95)',
+          borderColor:'rgba(0,212,255,0.2)',borderWidth:1,
+          titleColor:'#8899aa',bodyColor:'#e8edf5',
+          titleFont:{family:'JetBrains Mono',size:10},
+          bodyFont:{family:'JetBrains Mono',size:11},
+          callbacks:{title:([item])=>`t = ${item.label} min`}
+        }
+      },
+      scales:{
+        x:{display:true,grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#334455',maxTicksLimit:10,font:{size:9,family:'JetBrains Mono'}},title:{display:true,text:'Time (min)',color:'#445566',font:{size:9}}},
+        y:{display:true,grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#334455',font:{size:9,family:'JetBrains Mono'}},title:{display:true,text:'Power kW',color:'#445566',font:{size:9}}}
+      }
+    }
+  });
+}
+
+async function loadBatches() {
+  try {
+    const res = await fetch(`${API}/api/batches`);
+    const data = await res.json();
+    renderBatchTable(data);
+    document.getElementById('batch-count').textContent = `${data.length} batches loaded`;
+    document.getElementById('hist-count').textContent = `${data.length} RECORDS`;
+  } catch {
+    renderBatchTable(getFallbackBatches());
+  }
+}
+
+function getFallbackBatches() {
+  const batches = [];
+  for(let i=1;i<=20;i++) {
+    batches.push({
+      batch_id: `T${String(i).padStart(3,'0')}`,
+      hardness: 70+Math.random()*65,
+      friability: 0.3+Math.random()*1.6,
+      dissolution_rate: 81+Math.random()*18,
+      content_uniformity: 90+Math.random()*15,
+    });
+  }
+  return batches;
+}
+
+function renderBatchTable(batches) {
+  const tbody = document.getElementById('batch-tbody');
+  const show = batches.slice(0,15);
+  tbody.innerHTML = show.map(b=>{
+    const pass = b.hardness>=80&&b.hardness<=120&&b.friability<=1.0&&b.dissolution_rate>=85;
+    const warn = !pass && (b.hardness>=70&&b.dissolution_rate>=80);
+    const status = pass?'status-ok':warn?'status-warn':'status-err';
+    const label = pass?'PASS':warn?'REVIEW':'FAIL';
+    return `<tr style="border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+      <td style="padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--accent)">${b.batch_id}</td>
+      <td style="padding:10px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.72rem">${b.hardness.toFixed(1)} N</td>
+      <td style="padding:10px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.72rem">${b.friability.toFixed(2)}%</td>
+      <td style="padding:10px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.72rem">${b.dissolution_rate.toFixed(1)}%</td>
+      <td style="padding:10px 16px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.72rem">${b.content_uniformity.toFixed(1)}%</td>
+      <td style="padding:10px 16px;text-align:center"><span class="kpi-status ${status}">${label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// INIT
+window.onload = async () => {
+  await loadTimeSeries();
+  await loadBatches();
+  await runPrediction();
+};
+</script>
+</body>
+</html>
